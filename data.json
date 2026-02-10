@@ -1,14 +1,19 @@
 {
-  "users": [
+  "tasks": [
     {
       "id": 2,
-      "name": "Chauchau",
-      "age": 20
+      "Task": "Chauchau",
+      "Status": "completed"
     },
     {
       "id": 3,
-      "name": "Chokopan",
-      "age": 30
+      "Task": "Chokopan",
+      "Status": "in progress"
+    },
+    {
+      "id": 5,
+      "Task": "Drink lots of water",
+      "Status": "not started"
     }
   ]
 }
