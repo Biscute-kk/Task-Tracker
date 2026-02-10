@@ -86,6 +86,7 @@ const fs = require('fs');
 
 //------------------------------------------
 const readLine= require('readline');
+const { json } = require('stream/consumers');
 
 const r1 = readLine.createInterface({
     input: process.stdin,
@@ -93,30 +94,33 @@ const r1 = readLine.createInterface({
 });
 
 function readFile(fileName, progressName){
-    jsonData = parseFile(fileName);
-        // fs.readFile(fileName,(err,data)=>{
-        // if(err){
-        //     console.log(err);
-        //     return;
-        // }
-        // const jsonData= JSON.parse(data);
-        if (!progressName){
-            console.log(jsonData.tasks);
-        }else{
-        console.log(jsonData.tasks.filter(t=>t.Status==progressName));}
-        return;
-    // })
-}
-function parseFile(fileName){
-    fs.readFile(fileName,(err,data)=>{
+    // jsonData = parseFile(fileName);
+    // console.log(jsonData);
+        fs.readFile(fileName,(err,data)=>{
         if(err){
             console.log(err);
             return;
         }
         const jsonData= JSON.parse(data);
-    return jsonData;
+        if (!progressName){
+            console.log(jsonData.tasks);
+        }else{
+        console.log(jsonData.tasks.filter(t=>t.Status==progressName));}
+        return;
     })
 }
+// function parseFile(fileName){
+//     fs.readFile(fileName,(err,data)=>{
+//         if(err){
+//             console.log(err);
+//             return;
+//         }
+
+//     const jsonData= JSON.parse(data);
+
+//     return jsonData;
+//     })
+// }
 function writeFile(fileName,jsonData){
     fs.writeFile(fileName,
         JSON.stringify(jsonData,null,2),
@@ -173,10 +177,39 @@ r1.question('What do you want to do? enter the number\n1. Add Task\n2. Update Ta
                 r1.question('what do you want to update? Task(t) or Status(s):',value=>{
                     if (value=='t'){
                         r1.question('Enter Task:', newTask=>{
-                           const jsonData= parseFile('data.json');
-                           jsonData.tasks[ids-1].Task=newTask;
-                           var status= writeFile('data.json',jsonData);
-                           if (status==1){ console.log("sucessfully updated Task!!!");}
+                            fs.readFile('data.json',(err,data)=>{
+                                jsonData=JSON.parse(data);
+                                indexofTask=jsonData.tasks.findIndex(t=>t.id==ids);
+                                // console.log(jsonData.tasks[indexofTask]);
+                                jsonData.tasks[indexofTask].Task=newTask;
+                                fs.writeFile('data.json',
+                                    JSON.stringify(jsonData,null,2),
+                                    (err)=>{
+                                        if (err){console.log(err);}
+                                        else{console.log("sucessfully updated Task!!!");}
+                                    }
+                                )
+                            })
+                           
+                           
+                        })
+                    }
+                    else if (value=='s'){
+                        r1.question('Enter Status:', newStatus=>{
+                            fs.readFile('data.json',(err,data)=>{
+                                jsonData=JSON.parse(data);
+                                indexofTask=jsonData.tasks.findIndex(t=>t.id==ids);
+                                jsonData.tasks[indexofTask].Status=newStatus;
+                                fs.writeFile('data.json',
+                                    JSON.stringify(jsonData,null,2),
+                                    (err)=>{
+                                        if (err){console.log(err);}
+                                        else{console.log("sucessfully updated Task!!!");}
+                                    }
+                                )
+                            })
+                           
+                           
                         })
                     }
                 })
