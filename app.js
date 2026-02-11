@@ -86,7 +86,7 @@ const fs = require('fs');
 
 //------------------------------------------
 const readLine= require('readline');
-const { json } = require('stream/consumers');
+// const { json } = require('stream/consumers');
 
 const r1 = readLine.createInterface({
     input: process.stdin,
@@ -94,8 +94,7 @@ const r1 = readLine.createInterface({
 });
 
 function readFile(fileName, progressName){
-    // jsonData = parseFile(fileName);
-    // console.log(jsonData);
+
         fs.readFile(fileName,(err,data)=>{
         if(err){
             console.log(err);
@@ -109,29 +108,7 @@ function readFile(fileName, progressName){
         return;
     })
 }
-// function parseFile(fileName){
-//     fs.readFile(fileName,(err,data)=>{
-//         if(err){
-//             console.log(err);
-//             return;
-//         }
 
-//     const jsonData= JSON.parse(data);
-
-//     return jsonData;
-//     })
-// }
-function writeFile(fileName,jsonData){
-    fs.writeFile(fileName,
-        JSON.stringify(jsonData,null,2),
-        (err)=>{
-            if (err){console.log(err);
-                return 0;
-            }
-            return 1;
-        }
-    )
-}
 r1.question('What do you want to do? enter the number\n1. Add Task\n2. Update Task\n3. Show all tasks\n4. Show completed task\n5. Show in Progress tasks\n6. Show uncompleted task\n7. Delete task\n8. Exit\n Number: ', name=>{
  
     name=Number(name);
@@ -144,7 +121,7 @@ r1.question('What do you want to do? enter the number\n1. Add Task\n2. Update Ta
                     return;
                 }
             const jsonData= JSON.parse(data);
-            // const lastTask= jsonData.tasks.at[-1];
+
             const lastTask= jsonData.tasks[jsonData.tasks.length-1];
             var ids= lastTask.id;
             ids+=1;
@@ -153,7 +130,9 @@ r1.question('What do you want to do? enter the number\n1. Add Task\n2. Update Ta
             const newtask={
                 id:ids,
                 Task: newTask,
-                status:'not started'
+                status:'not started',
+                createdAt: new Date().toLocaleString(),
+                updatedAt: new Date().toLocaleString()
             };
                    
             jsonData.tasks.push(newtask);
@@ -167,13 +146,18 @@ r1.question('What do you want to do? enter the number\n1. Add Task\n2. Update Ta
             
             }
             )
+            r1.close();
             })
            
             });
             break;
         case 2:
             readFile('data.json');
-            r1.question('which task do you want to update?', ids=>{
+            r1.question('which task do you want to update?', idss=>{
+                fs.readFile('data.json',(err,data)=>{
+                                jsonData=JSON.parse(data);
+                const ids=Number(idss);
+                if (jsonData.tasks.some(t=>t.id===ids)){
                 r1.question('what do you want to update? Task(t) or Status(s):',value=>{
                     if (value=='t'){
                         r1.question('Enter Task:', newTask=>{
@@ -182,6 +166,7 @@ r1.question('What do you want to do? enter the number\n1. Add Task\n2. Update Ta
                                 indexofTask=jsonData.tasks.findIndex(t=>t.id==ids);
                                 // console.log(jsonData.tasks[indexofTask]);
                                 jsonData.tasks[indexofTask].Task=newTask;
+                                jsonData.tasks[indexofTask].updatedAt=new Date().toLocaleString();
                                 fs.writeFile('data.json',
                                     JSON.stringify(jsonData,null,2),
                                     (err)=>{
@@ -191,15 +176,37 @@ r1.question('What do you want to do? enter the number\n1. Add Task\n2. Update Ta
                                 )
                             })
                            
-                           
+                           r1.close();
                         })
                     }
                     else if (value=='s'){
-                        r1.question('Enter Status:', newStatus=>{
+                        r1.question('Enter Status:\n1. Not started\n2. In progress\n3.Completed : ', newStatuss=>{
+                            newStatus= Number(newStatuss);
                             fs.readFile('data.json',(err,data)=>{
                                 jsonData=JSON.parse(data);
                                 indexofTask=jsonData.tasks.findIndex(t=>t.id==ids);
-                                jsonData.tasks[indexofTask].Status=newStatus;
+                                switch (newStatus){
+                                    case 1:
+                                        jsonData.tasks[indexofTask].Status='not started';
+                                        jsonData.tasks[indexofTask].updatedAt=new Date().toLocaleString();
+                                        r1.close();
+                                        break;
+                                    case 2:
+                                        jsonData.tasks[indexofTask].Status='in progress';
+                                        jsonData.tasks[indexofTask].updatedAt=new Date().toLocaleString();
+                                        r1.close();
+                                        break;
+                                    case 3:
+                                        jsonData.tasks[indexofTask].Status='completed';
+                                        jsonData.tasks[indexofTask].updatedAt=new Date().toLocaleString();
+                                        r1.close();
+                                        break;
+                                    default:
+                                        console.log("wrong input!!");
+                                        r1.close();
+                                        break;
+                                }
+                               
                                 fs.writeFile('data.json',
                                     JSON.stringify(jsonData,null,2),
                                     (err)=>{
@@ -207,25 +214,35 @@ r1.question('What do you want to do? enter the number\n1. Add Task\n2. Update Ta
                                         else{console.log("sucessfully updated Task!!!");}
                                     }
                                 )
-                            })
-                           
-                           
+                            })                       
                         })
-                    }
-                })
+                    } 
+                    else {console.log("wrong input!!");
+                            r1.close();
+                    }                
+                })}
+                else{console.log("wrong Input!!");
+                    r1.close();
+                }
+                
+            });              
             })
             break;
         case 3:
            readFile('data.json');
+           r1.close();
             break;
         case 4:
             readFile('data.json','completed');
+            r1.close();
             break;
         case 5:
             readFile('data.json','in progress');
+            r1.close();
             break;
         case 6:
             readFile('data.json','not started');
+            r1.close();
             break;
         case 7:
             readFile('data.json');
@@ -249,13 +266,15 @@ r1.question('What do you want to do? enter the number\n1. Add Task\n2. Update Ta
                 })
             })
 
-
+            r1.close();
             break;
         case 8:
+            r1.close();
             break;
         default:
             console.log('Wrong input!!!');
+            r1.close();
+            break;
             
     }
-    // r1.close();
 })
